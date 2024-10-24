@@ -2,6 +2,7 @@
 
 import { Pool, QueryResult } from "pg";
 import { revalidatePath } from "next/cache";
+import { ActionState } from "@/components/TodoList";
 
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -10,22 +11,6 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD,
   port: parseInt(process.env.DB_PORT || "5432"),
 });
-
-export async function getUsersAction() {
-  try {
-    const client = await pool.connect();
-    const result = await client.query("SELECT * FROM todos");
-    client.release();
-
-    // 데이터 갱신을 위해 경로 재검증
-    revalidatePath("/");
-
-    return result.rows;
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    throw error;
-  }
-}
 
 export type Todo = {
   id: number;
@@ -45,7 +30,7 @@ async function executeQuery<T extends any[]>(
   }
 }
 
-export async function addTodo(prevState: any, formData: FormData) {
+export async function addTodo(_: ActionState, formData: FormData) {
   const text = formData.get("text");
   if (typeof text !== "string" || text.trim() === "") {
     return { error: "Invalid todo text" };
